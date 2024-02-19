@@ -1,0 +1,102 @@
+@using EleWise.ELMA.BPM.Web.Reports.Extensions
+@using System.Data
+@using System
+@using System.Text
+@using System.Text.RegularExpressions
+@using EleWise.ELMA.Web.Mvc.Html
+@model EleWise.ELMA.BPM.Web.Reports.Models.ReportParametersInfo
+@using EleWise.ELMA.API
+
+@{
+    //Получение источника данных по имени
+    var data = Model.DataSources["Данные"];
+    //Выполнение HQL или SQL запроса, содержащегося внутри источника данных, и получение результата
+    DataTable items = data.Get();
+}
+
+<style>
+    .report_panel .report-list-container {
+        margin-top: 10px;
+        border: 1px solid #E9E9E9;
+        border-radius: 2px;
+        overflow-x: auto;
+    }
+    .report-list-header {
+        font-size: 18px;
+    }
+    .report-list {
+        width: 100%;
+        font-size: 1rem;
+    }
+    .report-list tr th {
+        color: #B1B1B1;
+        padding: 16px 20px;
+        text-align: left;
+        border-bottom: 1px solid #E9E9E9;
+    }
+    .report-list tr td {
+        padding: 14px 20px;
+        vertical-align: middle;
+    }
+    .report-list tr:not(:last-child) td {
+        border-bottom: 1px solid #E9E9E9;
+    }
+</style>
+  
+<div>
+
+@* Включает постраничное отображение источника данных *@
+@(Html.Pager(Model, data))
+@* Заголовки колонок отчета. Название колонок берутся из названий столбцов таблицы, содержащей результат выполнения источника данных *@
+<div class="report-list-container">
+    <table class="report-list">
+        <tr>
+            <th scope="col">Наименование процесса</th>
+            <th scope="col">Номер версии</th>
+            <th scope="col">Автор публикации</th>
+            <th scope="col">Комментарий к публикации</th>
+            <th scope="col">Найденные шаблоны</th>
+        </tr>
+
+        @* Результат выполнения источника данных представляет собой таблицу. Пробегаемся по строкам таблицы и отображаем значение столбцов *@
+        @foreach (DataRow row in items.Rows)
+        { 
+            <tr valign="top">
+                <td>
+                    @* Считываем значение колонки Наименование процесса из текущей строки *@
+                    @row["Наименование процесса"]
+                </td>
+                <td>
+                    @* Считываем значение колонки Номер версии из текущей строки *@
+                    @row["Номер версии"]
+                </td>
+                <td>
+                    @* Считываем значение колонки Номер версии из текущей строки *@
+                    @row["Автор публикации"]
+                </td>
+                <td>
+                    @* Считываем значение колонки Номер версии из текущей строки *@
+                    @row["Комментарий к публикации"]
+                </td>
+                <td>
+                @{
+	                string pattern = @"<TemplateFileId>([a-fA-F\d-]+)</TemplateFileId>";
+	
+					MatchCollection matches = Regex.Matches(row["Диаграмма"].ToString(), pattern);
+					List<string> uids = new List<string>();
+					
+					foreach (Match match in matches)
+					{
+						string fileuid = match.Groups[1].Value;
+						
+						string button = "<br><button class=\"t-button-noborder t-button-nofill circle t-button-icon  small t-button BinaryFilePreviewSelectorButton file-attachment-image\" fileid=\""+fileuid+"\" onmouseup=\"elma.BinaryFilePreviewSelector.Click(this)\" nopreview=\"False\"><i class=\"svg-element t-button-image\" data-source=\"/Content/IconPack/attachment.svg\"><svg x=\"0\" y=\"0\" width=\"1024\" height=\"1024\" overflow=\"hidden\" viewBox=\"0, 0, 1024, 1024\" preserveAspectRatio=\"xMidYMid\" font-size=\"0\" color=\"#B1B1B1\" xml:space=\"default\" style=\"color:currentColor;fill:none;\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xmlns:xml=\"http://www.w3.org/XML/1998/namespace\" version=\"1.1\"><path d=\"M803.628 475.373 L490.042 789.495 C475.946 803.621 459.209 814.826 440.788 822.472 C422.368 830.117 402.624 834.052 382.684 834.052 C362.745 834.052 343.001 830.117 324.58 822.472 C306.16 814.826 289.423 803.621 275.326 789.495 C261.224 775.374 250.038 758.609 242.406 740.157 C234.774 721.704 230.845 701.927 230.845 681.953 C230.845 661.98 234.774 642.202 242.406 623.75 C250.038 605.298 261.224 588.532 275.326 574.411 L635.85 216.273 C652.612 199.482 675.346 190.05 699.051 190.05 C722.756 190.05 745.49 199.482 762.253 216.273 C779.014 233.064 788.431 255.837 788.431 279.582 C788.431 303.328 779.014 326.101 762.253 342.892 L449.097 653.632 C444.04 658.696 437.182 661.542 430.032 661.542 C422.881 661.542 416.024 658.696 410.967 653.632 C405.911 648.567 403.071 641.697 403.071 634.535 C403.071 627.372 405.911 620.503 410.967 615.437 L677.195 351.735 C683.937 344.981 687.724 335.821 687.724 326.27 C687.724 316.719 683.937 307.559 677.195 300.805 C670.453 294.052 661.308 290.258 651.774 290.258 C642.239 290.258 633.095 294.052 626.352 300.805 L360.144 564.508 C341.605 583.081 331.19 608.27 331.19 634.535 C331.19 660.8 341.605 685.989 360.144 704.562 C378.685 723.133 403.832 733.566 430.052 733.566 C456.272 733.566 481.418 723.133 499.959 704.562 L813.145 393.811 C828.123 378.809 840.004 360.998 848.109 341.396 C856.215 321.794 860.387 300.784 860.387 279.567 C860.387 258.35 856.215 237.34 848.109 217.738 C840.004 198.136 828.123 180.325 813.145 165.323 C798.168 150.32 780.388 138.419 760.819 130.299 C741.251 122.179 720.277 118 699.096 118 C677.915 118 656.941 122.179 637.373 130.299 C617.804 138.419 600.024 150.32 585.047 165.323 L224.523 523.462 C137.159 610.976 137.159 752.861 224.523 840.365 C311.888 927.879 453.531 927.879 540.885 840.365 L854.471 526.243 C861.212 519.489 865 510.329 865 500.778 C865 491.227 861.212 482.067 854.471 475.313 C847.72 468.568 838.572 464.784 829.037 464.796 C819.502 464.807 810.362 468.612 803.628 475.373 z\" xml:space=\"default\" style=\"fill:currentColor;\"></path></svg></i></button><a href=\"/SDK.Action/BinaryFiles/Download/"+fileuid+"\">"+fileuid+"</a>";
+					    @Html.Raw(button)
+					}
+				}
+                    
+                </td>
+            </tr>
+        }
+    </table>
+</div>
+</div>
